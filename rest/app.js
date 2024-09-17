@@ -3,13 +3,17 @@ const app = express();
 
 const morgan = require('morgan');
 
-const rotaProdutos = require('./routes/produtos')
-const rotaProdutosFn = require('./routes/produtosfn')
-const rotaPedidos = require('./routes/pedidos')
+const bodyParser = require('body-parser');
+
+const rotaProdutos = require('./routes/produtos');
+const rotaProdutosFn = require('./routes/produtosfn');
+const rotaPedidos = require('./routes/pedidos');
 // Middleware para interpretar JSON
-app.use(express.json());
 
 app.use(morgan('dev'));
+
+app.use(bodyParser.urlencoded({extended:false})); //apenas dados simples
+app.use(bodyParser.json());
 
 app.use('/produtos', rotaProdutos);
 app.use('/produtosfn', rotaProdutosFn);
