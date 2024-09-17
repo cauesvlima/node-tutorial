@@ -1,3 +1,4 @@
+require('dotenv').config(); // Carregar as variáveis do .env
 const express = require('express');
 const app = express();
 
@@ -11,9 +12,29 @@ const rotaPedidos = require('./routes/pedidos');
 // Middleware para interpretar JSON
 
 app.use(morgan('dev'));
+console.log(process.env.ALLOWED_ORIGIN)
 
 app.use(bodyParser.urlencoded({extended:false})); //apenas dados simples
 app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN);
+
+    res.header(
+        'Access-Control-Allow-Headers', 
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+    );
+    
+    if (req.method === 'OPTIONS') {
+        res.header(
+            'Access-Control-Allow-Methods',
+            'PUT, POST, PATCH, DELETE, GET'
+        );
+        return res.status(200).send({});
+    }
+
+    next();
+});
 
 app.use('/produtos', rotaProdutos);
 app.use('/produtosfn', rotaProdutosFn);
@@ -23,6 +44,8 @@ app.use('/teste',( req, res, next)=>{
         mensagem:'OK, Deu certo'
     });
 });
+
+
 app.use((req, res, next)=>{
     const erro= new Error('Não encontrado');
     erro.status = 404;
