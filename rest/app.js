@@ -12,7 +12,6 @@ const rotaPedidos = require('./routes/pedidos');
 // Middleware para interpretar JSON
 
 app.use(morgan('dev'));
-console.log(process.env.ALLOWED_ORIGIN)
 
 app.use(bodyParser.urlencoded({extended:false})); //apenas dados simples
 app.use(bodyParser.json());
@@ -31,7 +30,7 @@ app.use((req, res, next) => {
             'PUT, POST, PATCH, DELETE, GET'
         );
         return res.status(200).send({});
-    }
+    };
 
     next();
 });
