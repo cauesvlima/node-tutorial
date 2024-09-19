@@ -2,6 +2,18 @@ require('dotenv').config(); // Carregar as variáveis do .env
 const express = require('express');
 const app = express();
 
+//CRIAÇÂO DE TABELAS COM MODELS
+const sequelize = require('./config/database'); // Caminho para o arquivo database.js
+const Usuario = require('./models/Usuário'); // Caminho para o model Usuario
+
+sequelize.sync({ force: false }) // 'force: true' recria a tabela se ela já existir, cuidado com isso!
+    .then(() => {
+        console.log('Tabelas sincronizadas com sucesso!');
+    })
+    .catch(err => {
+        console.error('Erro ao sincronizar tabelas:', err);
+    });
+
 const morgan = require('morgan');
 
 const bodyParser = require('body-parser');
