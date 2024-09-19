@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 
 const rotaProdutos = require('./routes/produtos');
 const rotaProdutosFn = require('./routes/produtosfn');
+const rotaProdutosComModels = require('./routes/produtoscmodels')
 const rotaPedidos = require('./routes/pedidos');
 // Middleware para interpretar JSON
 
@@ -37,6 +38,7 @@ app.use((req, res, next) => {
 
 app.use('/produtos', rotaProdutos);
 app.use('/produtosfn', rotaProdutosFn);
+app.use('/produtosm', rotaProdutosComModels)
 app.use('/pedidos', rotaPedidos);
 app.use('/teste',( req, res, next)=>{
     res.status(200).send({
