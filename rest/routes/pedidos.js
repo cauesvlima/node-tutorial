@@ -1,44 +1,153 @@
 const express = require('express');
 const router = express.Router();
+const mysql = require('../mysql').pool;
 
 //Retorna tudo
 router.get('/', (req, res, next)=>{
-    res.status(200).send({
-        mensagem:'Lista de pedidos'
-    });
+    mysql.getConnection((error, conn)=>{
+        if(error){return res.status(500).send({error:error})};
+        conn.query(
+            'SELECT * FROM pedidos',
+            (error, result, field)=>{
+                if(error){res.status(500).send({error:error})}
+                const response = {
+                    quantidade: result.length,
+                    pedido:result.map(prod =>{
+                        return{
+                            idpedidos:prod.idpedidos,
+                            quantidade:prod.quantidade,
+                            idproduto:prod.id_produtos,
+                            request:{
+                                tipo:'GET',
+                                descricao:'Retorna um pedido específico',
+                                url:`${process.env.LOCAL_URL}pedidos/${prod.idpedidos}`,
+                                urlproduto:process.env.LOCAL_URL + 'produtos/' + prod.id_produtos
+                            }
+                        }
+                    })
+                };
+                return res.status(200).send(response);
+            }
+        )
+    })
 });
 
 //Insere pedido
 router.post('/',(req, res, next)=>{
-    const pedido={
-        id_produto: req.body.id_produto,
-        quantidade: req.body.quantidade
-    }
-    res.status(201).send({
-        mensagem:'Pedido cadastrado com sucesso!',
-        pedidoCriado: pedido
-    });
+    mysql.getConnection((error, conn)=>{
+        if(error){return res.status(500).send({error:error})};
+        conn.query(
+            'INSERT INTO pedidos (quantidade, id_produtos) VALUES (?,?)',
+            [req.body.quantidade, req.body.id_produtos],
+            (error, result, field)=>{
+                conn.release();
+                if(error){res.status(500).send({error:error})};
+                const response = {
+                    mensagem:'Produto inserido com sucesso!',
+                    produtoCriado:{
+                        idpedidos:result.insertId,
+                        quantidade:req.body.quantidade,
+                        id_produtos:req.body.id_produtos,
+                        request:{
+                            tipo:'GET',
+                            descricao:'Retorna todos os pedidos',
+                            url:`${process.env.LOCAL_URL}pedidos/`
+                        }
+                    }
+                }
+                res.status(201).send(response);
+            }
+        )
+    })
 });
 
 //Pega um pedido
-router.get('/:id_pedido', (req, res, next)=>{
-    const id = req.params.id_pedido;
-        res.status(200).send({
-            mensagem:'Detalhes do pedido',
-            id_pedido:id
-        });
+router.get('/:idpedidos', (req, res, next)=>{
+    mysql.getConnection((error, conn)=>{
+        if(error){return res.status(500).send({error:error})};
+
+        conn.query(
+            'SELECT * FROM pedidos WHERE idpedidos = ?;',
+            [req.params.idpedidos],
+            (error, resultado, field)=>{
+                conn.release();
+                if(error){res.status(500).send({error:error})}
+                
+        if (resultado.length == 0) {return res.status(404).send({mensagem:'Não foi encontrado nenhum pedido com esse ID'})}
+        const response ={
+            pedido: {
+                idpedidos: resultado[0].idpedidos,
+                quantidade: resultado[0].quantidade,
+                id_produtos: resultado[0].id_produtos,
+                request:{
+                    tipo:'GET',
+                    descricao:'Retorna um pedido específico',
+                    url:`${process.env.LOCAL_URL}pedidos/${resultado[0].idpedidos}`
+                }
+            }
+        }
+                return res.status(200).send(response);
+            }
+        )
+    })
 });
 
 router.patch('/', (req, res, next)=>{
-    res.status(200).send({
-        mensagem:'Pedido alterado!'
-    });
+    mysql.getConnection((error, conn)=>{
+        if(error){return res.status(500).send({error:error})};
+        conn.query(
+            `UPDATE pedidos 
+            SET quantidade = ?
+                id_produtos = ?
+                WHERE idpedidos = ?`,
+            [req.body.quantidade, req.body.id_produtos, req.body.idpedidos],
+            (error, result, field)=>{
+                conn.release();
+                if(error){res.status(500).send({error:error})};
+                const response = {
+                    mensagem:'Produto alterado com sucesso!',
+                    produtoCriado:{
+                        idpedidos:req.body.idpedidos,
+                        quantidade:req.body.quantidade,
+                        id_produtos:req.body.id_produtos,
+                        request:{
+                            tipo:'GET',
+                            descricao:'Retorna pedido alterado',
+                            url:`${process.env.LOCAL_URL}pedidos/${req.body.idpedidos}`
+                        }
+                    }
+                }
+                res.status(201).send(response);
+            }
+        )
+    })
 });
 
 router.delete('/', (req, res, next)=>{
-    res.status(200).send({
-        mensagem:'Pedido excluido!'
-    });
+    mysql.getConnection((error, conn)=>{
+        if(error){return res.status(500).send({error:error})};
+        conn.query(
+            `DELETE FROM pedidos WHERE idpedidos =?`,
+            [req.body.idpedidos],
+            (error, resultado, field)=>{
+                conn.release();
+                if(error){res.status(500).send({error:error})};
+                const response = {
+                    mensagem:'Pedido excluído com sucesso!',
+                    request:{
+                        tipo:'POST',
+                        descrição:'insere um pedido',
+                        url:`${process.env.LOCAL_URL}pedidos/`,
+                        body:{
+                            nome: 'String',
+                            preco:'Number'
+                        }
+                    }
+                }
+                res.status(202).send(response);
+            }
+        )
+    })
 });
 
 module.exports = router;
