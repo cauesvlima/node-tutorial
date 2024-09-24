@@ -32,34 +32,56 @@ router.get('/', (req, res, next)=>{
     })
 });
 
-//Insere pedido
-router.post('/',(req, res, next)=>{
-    mysql.getConnection((error, conn)=>{
-        if(error){return res.status(500).send({error:error})};
-        conn.query(
-            'INSERT INTO pedidos (quantidade, id_produtos) VALUES (?,?)',
-            [req.body.quantidade, req.body.id_produtos],
-            (error, result, field)=>{
-                conn.release();
-                if(error){res.status(500).send({error:error})};
-                const response = {
-                    mensagem:'Produto inserido com sucesso!',
-                    produtoCriado:{
-                        idpedidos:result.insertId,
-                        quantidade:req.body.quantidade,
-                        id_produtos:req.body.id_produtos,
-                        request:{
-                            tipo:'GET',
-                            descricao:'Retorna todos os pedidos',
-                            url:`${process.env.LOCAL_URL}pedidos/`
-                        }
-                    }
+router.post('/', (req, res, next) => {
+
+    mysql.getConnection((error, conn) => {
+        if (error) { return res.status(500).send({ error: error }) };
+
+        // Primeira query para verificar se o produto existe
+        conn.query('SELECT * FROM produtos WHERE idprodutos = ?;', [req.body.id_produtos],
+            (error, result, field) => {
+                if (error) {
+                    conn.release();
+                    return res.status(500).send({ error: error });
                 }
-                res.status(201).send(response);
+
+                if (result.length == 0) {
+                    conn.release();
+                    // Se o produto não for encontrado, retorna 404 e finaliza a requisição
+                    return res.status(404).send({ mensagem: 'Produto não encontrado' });
+                }
+
+                // Se o produto foi encontrado, prossegue com a inserção
+                conn.query(
+                    'INSERT INTO pedidos (quantidade, id_produtos) VALUES (?,?)',
+                    [req.body.quantidade, req.body.id_produtos],
+                    (error, result, field) => {
+                        conn.release();
+                        if (error) {
+                            return res.status(500).send({ error: error });
+                        }
+
+                        const response = {
+                            mensagem: 'Pedido inserido com sucesso!',
+                            pedidoCriado: {
+                                idpedidos: result.insertId,
+                                quantidade: req.body.quantidade,
+                                id_produtos: req.body.id_produtos,
+                                request: {
+                                    tipo: 'GET',
+                                    descricao: 'Retorna todos os pedidos',
+                                    url: `${process.env.LOCAL_URL}pedidos/`
+                                }
+                            }
+                        };
+                        res.status(201).send(response);
+                    }
+                );
             }
-        )
-    })
+        );
+    });
 });
+
 
 //Pega um pedido
 router.get('/:idpedidos', (req, res, next)=>{
