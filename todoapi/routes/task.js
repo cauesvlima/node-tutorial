@@ -121,8 +121,7 @@ router.put('/:idTask', async (req, res, next) => {
     const { name, description, completed, color, position, priority } = req.body;
 
     try {
-        // Tentar encontrar a task antes de atualizar
-        const task = await Task.findOne({ where: { IdTask: idTask } });
+        const task = await Task.findOne({ where: { IdTask: idTask } });// Tentar encontrar a task antes de atualizar
 
         if (!task) {
             return res.status(404).send({
@@ -130,7 +129,6 @@ router.put('/:idTask', async (req, res, next) => {
             });
         }
 
-        // Atualizar os campos fornecidos no corpo da requisição
         if (name) task.Name = name;
         if (description) task.Description = description;
         if (completed !== undefined) task.Completed = completed;
@@ -138,10 +136,8 @@ router.put('/:idTask', async (req, res, next) => {
         if (position !== undefined) task.Position = position;
         if (priority !== undefined) task.Priority = priority;
 
-        // Salvar as alterações
-        await task.save();
+        await task.save();//Salvar alteração
 
-        // Resposta de sucesso
         res.status(200).send({
             mensagem: 'Task atualizada com sucesso!',
             taskAtualizada: {
@@ -161,7 +157,6 @@ router.put('/:idTask', async (req, res, next) => {
         });
 
     } catch (error) {
-        // Tratamento de erro
         res.status(500).send({
             mensagem: 'Erro ao tentar atualizar a task',
             erro: error.message
