@@ -7,6 +7,7 @@ const morgan = require('morgan');
 
 const bodyParser = require('body-parser');
 
+const TaskRoute = require('./routes/task');
 const ListRoute = require('./routes/list');
 
 app.use(morgan('dev'));
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/list', ListRoute);
+app.use('/task', TaskRoute);
 
 app.use('/',( req, res, next)=>{
     res.status(200).send({
