@@ -126,4 +126,91 @@ router.get('/:idList', async (req, res, next) => {
         });
     }
 });
+
+
+//Delete do list
+router.delete('/:idList', async (req, res, next) => {
+    const idList = req.params.idList;
+
+    try {
+        const list = await List.findOne({ where: { id: idList } });
+        
+        if (!list) {
+            return res.status(404).send({
+                mensagem: 'Lista não encontrada.'
+            });
+        }
+
+        await Task.destroy({ where: { IdList: idList } });
+
+        await List.destroy({ where: { id: idList } });
+
+        const response = {
+            mensagem: 'Lista e suas tarefas foram deletadas com sucesso!',
+            request: {
+                tipo: 'POST',
+                descricao: 'Cria uma nova lista',
+                url: `${process.env.LOCAL_URL}list/`,
+                body: { nome: 'String' }
+            }
+        };
+
+        res.status(200).send(response);
+
+    } catch (error) {
+        res.status(500).send({
+            mensagem: 'Erro ao tentar deletar a lista e suas tarefas',
+            erro: error.message
+        });
+    }
+});
+
+
+//Edição da lista
+router.put('/:idList', async (req, res, next) => {
+    const idList = req.params.idList;
+    const { nome } = req.body;
+
+    try {
+        const list = await List.findOne({ where: { id: idList } });
+        
+        if (!list) {
+            return res.status(404).send({
+                mensagem: 'Lista não encontrada.',
+                result: 0
+            });
+        }
+
+        if (!nome || nome.trim() === "") {
+            return res.status(400).send({
+                mensagem: 'O nome da lista é obrigatório.'
+            });
+        }
+
+        list.Nome = nome;
+        await list.save();
+
+        const response = {
+            mensagem: 'Lista atualizada com sucesso!',
+            listaAtualizada: {
+                id: list.id,
+                nome: list.Nome,
+                request: {
+                    tipo: 'GET',
+                    descricao: 'Retorna os detalhes da lista atualizada',
+                    url: `${process.env.LOCAL_URL}list/${list.id}`
+                }
+            }
+        };
+
+        res.status(200).send(response);
+
+    } catch (error) {
+        res.status(500).send({
+            mensagem: 'Erro ao tentar atualizar a lista',
+            erro: error.message
+        });
+    }
+});
+
 module.exports = router;
